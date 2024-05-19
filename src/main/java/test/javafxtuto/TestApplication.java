@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import test.javafxtuto.helloworld.HelloApp;
+import test.javafxtuto.compteurDeLike.MainCompteurApp;
 
 @SpringBootApplication
 public class TestApplication {
@@ -18,7 +18,7 @@ public class TestApplication {
     builder.headless(false);
     context = builder.run(args);
 
-    Application.launch(HelloApp.class);
+    Application.launch(MainCompteurApp.class);
 
   }
 

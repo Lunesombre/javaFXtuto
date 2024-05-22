@@ -97,6 +97,7 @@ public class MainCompteurApp extends Application {
     Scene scene = new Scene(root, 300, 200);
 
     primaryStage.setScene(scene);
+    primaryStage.setResizable(false);
     primaryStage.show(); // affiche la fenêtre
     primaryStage.centerOnScreen(); // centre la fenêtre, doit être appelée après show()
   }

@@ -1,11 +1,10 @@
 package test.javafxtuto.compteur_de_like;
 
-import java.util.Objects;
-import javafx.animation.PauseTransition;
+
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -13,99 +12,80 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import javafx.util.Duration;
+
 
 public class MainCompteurApp extends Application {
 
-  private int totalLikesCount = 0;
-  private final Label label = new Label(NB_LIKE + totalLikesCount);
-  public static final String NB_LIKE = "Nombre de like actuel : ";
+  private final IntegerProperty totalLikesCount = new SimpleIntegerProperty(0); // Observable puisque c'est un peu le but du tuto.
+  private final Label statusLabel = new Label("You currently have " + totalLikesCount + " likes.");
 
   @Override
   public void start(Stage primaryStage) throws Exception {
-    primaryStage.setTitle("Compteur de Likes");
+    String fontName = "Luciole";
+    Font luciole16bold = Font.font(fontName, FontWeight.BOLD, 16);
+    primaryStage.setTitle("Like counter");
+    primaryStage.getIcons().add(new Image("assets/icons/liked.png")); // ajoute une icône à l'appli, parce que pourquoi pas.
 
     VBox root = new VBox(10); //  New VBox avec une marge entre chaque nœud.
     root.setPadding(new Insets(25)); // Ajout padding
     root.setAlignment(Pos.CENTER); // Centrer les nœuds.
+    root.setBackground(new Background(new BackgroundFill(Color.web("#F0F4F8"), null, null))); // couleur de fond de la VBox
 
-    ImageView likeImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/like.png")).toString());
-    likeImageView.setFitHeight(30);
-    likeImageView.setFitWidth(30);
-    ImageView likehoverImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/like-hover.png")).toString());
-    likehoverImageView.setFitHeight(30);
-    likehoverImageView.setFitWidth(30);
-    ImageView likedImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/liked.png")).toString());
-    likedImageView.setFitWidth(30);
-    likedImageView.setFitHeight(30);
-    ImageView dislikeImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/dislike.png")).toString());
-    dislikeImageView.setFitHeight(30);
-    dislikeImageView.setFitWidth(30);
-    Image dislikeHover = new Image("/assets/icons/dislike-hover.png", 30, 30, false, false);
-    ImageView dislikeHoverImageView = new ImageView();
-    dislikeHoverImageView.setImage(dislikeHover);
-    Image disliked = new Image("/assets/icons/disliked.png", 30, 30, false, false);
-    ImageView dislikedImageView = new ImageView();
-    dislikedImageView.setImage(disliked);
+    statusLabel.setFont(Font.font(fontName, 14)); // définit la police et la font size
+    statusLabel.setTextFill(Color.web("#044E54")); // définit la couleur en héxadécimal
+    statusLabel.textProperty().bind(Bindings.createStringBinding(() -> { // utilise des Observables et bindings pour mettre à jour le statusLabel.
+      int likes = totalLikesCount.get();
+      return "You currently have " + likes + (likes == 1 ? " like." : " likes.");
+    }, totalLikesCount));
 
-    Button addLikeButton = new Button("J'adore");
+    Label titleLabel = new Label("Like Counter");
+    titleLabel.setFont(Font.font("Pacifico", FontWeight.BOLD, 28));
+    titleLabel.setTextFill(Color.web("#044E54"));
+    titleLabel.setPadding(new Insets(0, 0, 40, 0));
 
-    addLikeButton.setContentDisplay(ContentDisplay.BOTTOM);
-    addLikeButton.graphicProperty().bind(Bindings.when(addLikeButton.hoverProperty()).then(likehoverImageView).otherwise(likeImageView));
+    HBox buttonsContainer = new HBox(10); // HBox pour mettre les boutons ensemble sur une ligne
 
-    Button removeLikeButton = new Button("Je n'aime plus");
-    removeLikeButton.graphicProperty().bind(Bindings.when(removeLikeButton.hoverProperty()).then(dislikeHoverImageView).otherwise(dislikeImageView));
+    Button addLikeButton = new Button("Love it".toUpperCase());
+    stylizeMyButtons(luciole16bold, addLikeButton);
 
-    removeLikeButton.setContentDisplay(ContentDisplay.BOTTOM);
+    Button removeLikeButton = new Button("Don't like it".toUpperCase());
+    stylizeMyButtons(luciole16bold, removeLikeButton);
 
-    addLikeButton.setOnAction(event -> {
-      updateStatusLabel(++totalLikesCount);
-      changeIconOnClick(likeImageView, likedImageView, likehoverImageView, addLikeButton);
-    });
-
+    addLikeButton.setOnAction(event -> totalLikesCount.set(totalLikesCount.get() + 1));
     removeLikeButton.setOnAction(event -> {
-      if (totalLikesCount > 0) {
-        updateStatusLabel(--totalLikesCount);
-        changeIconOnClick(dislikeImageView, dislikedImageView, dislikeHoverImageView, removeLikeButton);
+      if (totalLikesCount.get() > 0) {
+        totalLikesCount.set(totalLikesCount.get() - 1);
       }
     });
 
-    root.getChildren().addAll(label, addLikeButton, removeLikeButton);
+    buttonsContainer.getChildren().addAll(addLikeButton, removeLikeButton);
+    root.getChildren().addAll(titleLabel, statusLabel, buttonsContainer);
 
-    Scene scene = new Scene(root, 300, 200);
+    Scene scene = new Scene(root);
 
     primaryStage.setScene(scene);
-    primaryStage.setResizable(false);
+    primaryStage.setResizable(false); // empêche de passer en plein écran.
     primaryStage.show(); // affiche la fenêtre
     primaryStage.centerOnScreen(); // centre la fenêtre, doit être appelée après show()
   }
 
-  /**
-   * Change l'icône d'un bouton lorsqu'il est cliqué et la garde 250ms. Après la pause, l'icône du bouton est rétablie à son état normal ou à son état
-   * de hover, en fonction de si la souris survole le bouton ou non.
-   *
-   * @param normalImageView  L'icône normale du bouton.
-   * @param clickedImageView L'icône du bouton lorsqu'il est cliqué.
-   * @param hoverImageView   L'icône du bouton lorsqu'il est survolé par la souris.
-   * @param button           Le bouton dont l'icône doit être changée.
-   */
-  private void changeIconOnClick(ImageView normalImageView, ImageView clickedImageView, ImageView hoverImageView, Button button) {
-    BooleanProperty isAnimationFinished = new SimpleBooleanProperty(false);
-    PauseTransition pause = new PauseTransition(Duration.millis(250));
-    pause.setOnFinished(e -> isAnimationFinished.set(true));
-    pause.play();
-    button.graphicProperty().bind(
-        Bindings.when(isAnimationFinished).then(
-                Bindings.when(button.hoverProperty())
-                    .then(hoverImageView)
-                    .otherwise(normalImageView))
-            .otherwise(clickedImageView));
+  private void stylizeMyButtons(Font font, Button button) {
+    button.setFont(font);
+    button.setBackground(new Background(new BackgroundFill(Color.web("#E66A6A", 0.9), new CornerRadii(10), null)));
+    button.setTextFill(Color.WHITE);
+    button.setPadding(new Insets(8));
+    button.setContentDisplay(ContentDisplay.BOTTOM);
+    button.setPrefWidth(150); // donne une largeur aux boutons plutôt qu'ils s'adaptent à leur contenu.
+
   }
 
-  private void updateStatusLabel(int numberOfLikes) {
-    label.setText(NB_LIKE + numberOfLikes);
-  }
 }

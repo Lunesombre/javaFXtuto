@@ -1,8 +1,11 @@
-package test.javafxtuto.compteurDeLike;
+package test.javafxtuto.compteur_de_like;
 
 import java.util.Objects;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -25,19 +28,6 @@ public class MainCompteurApp extends Application {
   public void start(Stage primaryStage) throws Exception {
     primaryStage.setTitle("Compteur de Likes");
 
-/*    StackPane root = new StackPane();
-    Label label = new Label("Hello World");
-    Rectangle rectangle = new Rectangle(360, 200, Color.YELLOW);
-
-    root.getChildren().add(label); // on ajoute un nœud enfant au StackPane
-    root.getChildren().add(
-        rectangle); // on ajoute un autre nœud enfant au StackPane, on le remonte au-dessus du label, sinon, comme il s'empile au-dessus, il le cache.
-    rectangle.toBack(); // envoie le rectangle en arrière
-
-    Scene scene = new Scene(root, 600, 400); // on crée une scène avec comme paramètre le nœud parent, on peut lui ajouter directement une taille
-    primaryStage.setScene(scene); // on ajoute la scene au stage.
-*/
-
     VBox root = new VBox(10); //  New VBox avec une marge entre chaque nœud.
     root.setPadding(new Insets(25)); // Ajout padding
     root.setAlignment(Pos.CENTER); // Centrer les nœuds.
@@ -45,7 +35,6 @@ public class MainCompteurApp extends Application {
     ImageView likeImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/like.png")).toString());
     likeImageView.setFitHeight(30);
     likeImageView.setFitWidth(30);
-//    likeImageView.setPreserveRatio(true);
     ImageView likehoverImageView = new ImageView(Objects.requireNonNull(getClass().getResource("/assets/icons/like-hover.png")).toString());
     likehoverImageView.setFitHeight(30);
     likehoverImageView.setFitWidth(30);
@@ -63,36 +52,28 @@ public class MainCompteurApp extends Application {
     dislikedImageView.setImage(disliked);
 
     Button addLikeButton = new Button("J'adore");
-    addLikeButton.setGraphic(likeImageView);
-    addLikeButton.setContentDisplay(ContentDisplay.BOTTOM);
-    addLikeButton.setOnMouseEntered(event -> addLikeButton.setGraphic(likehoverImageView));
-    addLikeButton.setOnMouseExited(event -> addLikeButton.setGraphic(likeImageView));
 
-    Button addDislikeButton = new Button("Je n'aime plus");
-    addDislikeButton.setGraphic(dislikeImageView);
-    addDislikeButton.setContentDisplay(ContentDisplay.BOTTOM);
-    addDislikeButton.setOnMouseEntered(event -> addDislikeButton.setGraphic(dislikeHoverImageView));
-    addDislikeButton.setOnMouseExited(event -> addDislikeButton.setGraphic(dislikeImageView));
+    addLikeButton.setContentDisplay(ContentDisplay.BOTTOM);
+    addLikeButton.graphicProperty().bind(Bindings.when(addLikeButton.hoverProperty()).then(likehoverImageView).otherwise(likeImageView));
+
+    Button removeLikeButton = new Button("Je n'aime plus");
+    removeLikeButton.graphicProperty().bind(Bindings.when(removeLikeButton.hoverProperty()).then(dislikeHoverImageView).otherwise(dislikeImageView));
+
+    removeLikeButton.setContentDisplay(ContentDisplay.BOTTOM);
 
     addLikeButton.setOnAction(event -> {
       updateStatusLabel(++totalLikesCount);
-      addLikeButton.setGraphic(likedImageView);
-      PauseTransition pause = new PauseTransition(Duration.millis(250));
-      pause.setOnFinished(e -> addLikeButton.setGraphic(likeImageView));
-      pause.play();
+      changeIconOnClick(likeImageView, likedImageView, likehoverImageView, addLikeButton);
     });
 
-    addDislikeButton.setOnAction(event -> {
+    removeLikeButton.setOnAction(event -> {
       if (totalLikesCount > 0) {
         updateStatusLabel(--totalLikesCount);
-        addDislikeButton.setGraphic(dislikedImageView);
-        PauseTransition pause = new PauseTransition(Duration.millis(250));
-        pause.setOnFinished(e -> addDislikeButton.setGraphic(dislikeImageView));
-        pause.play();
+        changeIconOnClick(dislikeImageView, dislikedImageView, dislikeHoverImageView, removeLikeButton);
       }
     });
 
-    root.getChildren().addAll(label, addLikeButton, addDislikeButton);
+    root.getChildren().addAll(label, addLikeButton, removeLikeButton);
 
     Scene scene = new Scene(root, 300, 200);
 
@@ -100,6 +81,28 @@ public class MainCompteurApp extends Application {
     primaryStage.setResizable(false);
     primaryStage.show(); // affiche la fenêtre
     primaryStage.centerOnScreen(); // centre la fenêtre, doit être appelée après show()
+  }
+
+  /**
+   * Change l'icône d'un bouton lorsqu'il est cliqué et la garde 250ms. Après la pause, l'icône du bouton est rétablie à son état normal ou à son état
+   * de hover, en fonction de si la souris survole le bouton ou non.
+   *
+   * @param normalImageView  L'icône normale du bouton.
+   * @param clickedImageView L'icône du bouton lorsqu'il est cliqué.
+   * @param hoverImageView   L'icône du bouton lorsqu'il est survolé par la souris.
+   * @param button           Le bouton dont l'icône doit être changée.
+   */
+  private void changeIconOnClick(ImageView normalImageView, ImageView clickedImageView, ImageView hoverImageView, Button button) {
+    BooleanProperty isAnimationFinished = new SimpleBooleanProperty(false);
+    PauseTransition pause = new PauseTransition(Duration.millis(250));
+    pause.setOnFinished(e -> isAnimationFinished.set(true));
+    pause.play();
+    button.graphicProperty().bind(
+        Bindings.when(isAnimationFinished).then(
+                Bindings.when(button.hoverProperty())
+                    .then(hoverImageView)
+                    .otherwise(normalImageView))
+            .otherwise(clickedImageView));
   }
 
   private void updateStatusLabel(int numberOfLikes) {
